@@ -1,0 +1,81 @@
+<?php
+
+/**
+ * Implements hook_form_form_id_alter().
+ */
+function assignment_form_system_site_information_settings_alter(&$form, $form_state, $form_id) {
+  global $install_state;
+  // Get site api key value.
+  $assignment = \Drupal::config('siteapikey.configuration')->get('siteapikey');
+
+  // fieldset and textfield to add site api key in 'Site information form'.
+  $form['site_api'] = [
+    '#type' => 'fieldset',
+    '#title' => t('Site API'),
+    '#access' => empty($install_state['config_install_path']),
+  ];
+
+  $form['site_api']['assignment'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Site API Key'),
+    '#default_value' => $assignment ?: 'No API Key yet',
+    '#description' => t('An API Key to access site pages in JSON format.'),
+    '#access' => empty($install_state['config_install_path']),
+  );
+
+  // Change form submit button text to 'Update Configuration'
+  $form['actions']['submit']['#value'] = t('Update configuration');
+
+  // Validate siteapi key field
+  $form['#validate'][] = '_assignment_validate_handler';
+
+  // Handle form submission
+  $form['#submit'][] = '_assignment_submit_handler';
+}
+
+/**
+ * Validate handler for siteapi key field.
+ */
+function _assignment_validate_handler($form, &$form_state) {
+  if($form_state->hasValue('assignment')) {
+    $siteapi = $form_state->getValue('assignment');
+    if(preg_match("/[^a-z0-9#-]/i", $siteapi)){
+      $form_state->setErrorByName('assignment', t('Please enter valid site api key. Only letters, digits and some special characters (#,-) are allowed.'));
+    }
+  }
+}
+
+/**
+ * Submit handler to save api key value in database.
+ */
+function _assignment_submit_handler($form, &$form_state) {
+  // Update site api key value as system variable
+  $config = \Drupal::configFactory()->getEditable('siteapikey.configuration');
+  $new_assignment = $form_state->getValue(['assignment']);
+  $config->set('siteapikey', $new_assignment);
+  $config->save();
+
+  // Success message for site api key database storage
+  drupal_set_message("Successfully set Site API Key to " . $new_assignment .".");
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function assignment_uninstall(){
+  // Remove the previously set site api key value configuration
+  \Drupal::configFactory()->getEditable('siteapikey.configuration')->delete();
+}
+
+/**
+ * Implements hook_theme().
+ */
+function assignment_theme($existing, $type, $theme, $path) {
+  return array(
+    'assignment' => array(
+      'variables' => array(
+        'items' => array(),
+      )
+    )
+  );
+}

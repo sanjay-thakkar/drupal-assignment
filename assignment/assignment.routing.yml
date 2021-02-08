@@ -1,0 +1,7 @@
+assignment.json_api:
+  path: '/page_json/{nid}'
+  defaults:
+    _controller: '\Drupal\assignment\Controller\AssignmentController:renderApi'
+    _title: 'JSON api'
+  requirements:
+    _permission: 'access content'

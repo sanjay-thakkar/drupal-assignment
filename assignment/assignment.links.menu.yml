@@ -1,0 +1,6 @@
+assignment.json_api:
+  title: 'JSON'
+  description: 'Display node based on node id in serialization format'
+  menu_name: main
+  route_name: assignment.json_api
+  route_parameters: { nid: '1' }
